@@ -1,0 +1,45 @@
+name: build and deploy
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create config.yaml file
+        run: |
+          cat > configs/config.yaml << EOF
+          app:
+            debug: false
+            token: ${{ secrets.APP_TOKEN }}
+            channelid: ${{ secrets.APP_CHANNELID }}
+          EOF
+
+      - name: Display config.yaml file
+        run: cat configs/config.yaml
+
+      - name: Copy-App-To-VM
+        uses: appleboy/scp-action@master
+        with:
+          host: '${{ secrets.VM_HOST }}'
+          username: '${{ secrets.VM_USERNAME }}'
+          password: '${{ secrets.VM_PASSWORD }}'
+          port: '${{ secrets.VM_SSH_PORT }}'
+          source: .
+          target: /root/price-tracker
+
+      - name: Deploy-Crawler-APP-To-VM
+        uses: appleboy/ssh-action@master
+        with:
+          host: '${{ secrets.VM_HOST }}'
+          username: '${{ secrets.VM_USERNAME }}'
+          password: '${{ secrets.VM_PASSWORD }}'
+          port: '${{ secrets.VM_SSH_PORT }}'
+          script: |
+            cd /root/price-tracker
+            make up

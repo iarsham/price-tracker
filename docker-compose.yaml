@@ -1,0 +1,16 @@
+x-base:
+  &base
+  networks:
+    - price-tracker-network
+  restart: always
+
+services:
+  price-tracker-bot:
+    <<: *base
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: price-tracker
+
+networks:
+  price-tracker-network:
